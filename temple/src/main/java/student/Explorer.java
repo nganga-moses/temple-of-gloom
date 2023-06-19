@@ -2,6 +2,10 @@ package student;
 
 import game.EscapeState;
 import game.ExplorationState;
+import game.Node;
+import game.NodeStatus;
+
+import java.util.Collection;
 
 public class Explorer {
 
@@ -37,6 +41,35 @@ public class Explorer {
      */
     public void explore(ExplorationState state) {
         //TODO : Explore the cavern and find the orb
+        if (state.getDistanceToTarget() == 0) {
+            return;
+        }
+        //find neighbors
+        Collection<NodeStatus> neighbors = state.getNeighbours();
+        System.out.print(neighbors.toString());
+        NodeStatus closestNeighbor = null;
+        for (NodeStatus neighbor : neighbors) {
+            if (neighbor.distanceToTarget() < state.getDistanceToTarget()){
+                //print distance to target
+                System.out.println("neighbor: "+neighbor.distanceToTarget());
+                if (closestNeighbor == null || neighbor.compareTo(closestNeighbor) <= 0) {
+                    closestNeighbor = neighbor;
+                }else if(closestNeighbor.compareTo(neighbor) > 0){
+                        closestNeighbor = neighbor;
+                    System.out.println("not closest Neighbor: "+neighbor.distanceToTarget());
+
+                }
+
+            }
+
+        }
+        assert closestNeighbor != null;
+        System.out.println("closet neighbor: "+ closestNeighbor.distanceToTarget());
+        state.moveTo(closestNeighbor.nodeID());
+        //move to that tile
+        explore(state);
+
+
     }
 
     /**
