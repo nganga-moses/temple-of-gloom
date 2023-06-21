@@ -46,30 +46,42 @@ public class Explorer {
         }
         //find neighbors
         Collection<NodeStatus> neighbors = state.getNeighbours();
-        System.out.print(neighbors.toString());
         NodeStatus closestNeighbor = null;
+
+        System.out.println("Current location: "+state.getCurrentLocation());
+        System.out.println("State distance from Orb: " + state.getDistanceToTarget());
+        System.out.println("Neughbors: " + neighbors.toString());
         for (NodeStatus neighbor : neighbors) {
-            if (neighbor.distanceToTarget() < state.getDistanceToTarget()){
-                //print distance to target
-                System.out.println("neighbor: "+neighbor.distanceToTarget());
-                if (closestNeighbor == null || neighbor.compareTo(closestNeighbor) <= 0) {
+            if (closestNeighbor == null) {
+                closestNeighbor = neighbor;
+            }
+            System.out.println("neighor ID: "+neighbor.nodeID());
+            System.out.println("Neighbor Distance to target: "+neighbor.distanceToTarget());
+            if(neighbor.distanceToTarget() <= state.getDistanceToTarget()){
+                System.out.println("Closet neighor ID: "+closestNeighbor.nodeID());
+                if ( neighbor.compareTo(closestNeighbor) < 0) {
                     closestNeighbor = neighbor;
-                }else if(closestNeighbor.compareTo(neighbor) > 0){
+                }else if(neighbor.compareTo(closestNeighbor) == 0){
+                    if(neighbor.nodeID() > closestNeighbor.nodeID()){
                         closestNeighbor = neighbor;
-                    System.out.println("not closest Neighbor: "+neighbor.distanceToTarget());
-
+                    }
                 }
-
+            }else{
+                System.out.println("Closest neighbor in loop: "+closestNeighbor.nodeID());
+                if(neighbor.compareTo(closestNeighbor) < 0){
+                    System.out.println("close neighor ID: "+neighbor.nodeID());
+                    closestNeighbor = neighbor;
+                }
             }
 
+
         }
-        assert closestNeighbor != null;
-        System.out.println("closet neighbor: "+ closestNeighbor.distanceToTarget());
+        System.out.println("Chosen neighbor: "+closestNeighbor.nodeID());
+        System.out.println("------------- ");
+        //move to neighbor
         state.moveTo(closestNeighbor.nodeID());
-        //move to that tile
+        //recursive call
         explore(state);
-
-
     }
 
     /**
