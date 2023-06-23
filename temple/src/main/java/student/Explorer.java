@@ -5,7 +5,10 @@ import game.ExplorationState;
 import game.Node;
 import game.NodeStatus;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class Explorer {
 
@@ -44,44 +47,53 @@ public class Explorer {
         if (state.getDistanceToTarget() == 0) {
             return;
         }
+        List<NodeStatus> visitedNodes = new ArrayList<>();
+
+        if (crawl(state, visitedNodes)) {
+            return;
+        }
+        //recursive call
+        explore(state);
+    }
+
+    private boolean crawl(ExplorationState state, List<NodeStatus> visitedNodes) {
+        if (state.getDistanceToTarget() == 0) {
+            return true;
+        }
         //find neighbors
         Collection<NodeStatus> neighbors = state.getNeighbours();
         NodeStatus closestNeighbor = null;
+        System.out.println("Current Location: " + state.getCurrentLocation());
+        System.out.println("Distance from target: " + state.getDistanceToTarget());
+        System.out.println("Neighbors: " + neighbors.toString());
+        System.out.println("Visited Nodes: " + visitedNodes);
 
-        System.out.println("Current location: "+state.getCurrentLocation());
-        System.out.println("State distance from Orb: " + state.getDistanceToTarget());
-        System.out.println("Neughbors: " + neighbors.toString());
+
         for (NodeStatus neighbor : neighbors) {
             if (closestNeighbor == null) {
                 closestNeighbor = neighbor;
-            }
-            System.out.println("neighor ID: "+neighbor.nodeID());
-            System.out.println("Neighbor Distance to target: "+neighbor.distanceToTarget());
-            if(neighbor.distanceToTarget() <= state.getDistanceToTarget()){
-                System.out.println("Closet neighor ID: "+closestNeighbor.nodeID());
-                if ( neighbor.compareTo(closestNeighbor) < 0) {
+                visitedNodes.add(neighbor);
+            } else {
+                if (neighbor.compareTo(closestNeighbor) <= 0 && !visitedNodes.contains(neighbor)) {
                     closestNeighbor = neighbor;
-                }else if(neighbor.compareTo(closestNeighbor) == 0){
-                    if(neighbor.nodeID() > closestNeighbor.nodeID()){
-                        closestNeighbor = neighbor;
-                    }
-                }
-            }else{
-                System.out.println("Closest neighbor in loop: "+closestNeighbor.nodeID());
-                if(neighbor.compareTo(closestNeighbor) < 0){
-                    System.out.println("close neighor ID: "+neighbor.nodeID());
-                    closestNeighbor = neighbor;
+                    visitedNodes.add(neighbor);
+                }else{
+                    visitedNodes.add(neighbor);
                 }
             }
-
 
         }
-        System.out.println("Chosen neighbor: "+closestNeighbor.nodeID());
+        System.out.println("Chosen neighbor: " + closestNeighbor.nodeID());
         System.out.println("------------- ");
         //move to neighbor
+
         state.moveTo(closestNeighbor.nodeID());
-        //recursive call
-        explore(state);
+        return crawl(state, visitedNodes);
+    }
+
+    public boolean visited(NodeStatus node, List<NodeStatus> visitedNodes) {
+
+        return false;
     }
 
     /**
