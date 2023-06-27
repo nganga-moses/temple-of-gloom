@@ -47,35 +47,26 @@ public class Explorer {
         //previous node
         ArrayDeque<Long> savedMoves = new ArrayDeque<>();
         ArrayDeque<Long> visitedPath = new ArrayDeque<>();
+
        while (state.getDistanceToTarget() > 0) {
-           visitedPath.addFirst(state.getCurrentLocation());
-           if (crawl(state, visitedPath,savedMoves)) {
-               return;
+           // push current location onto path taken
+           visitedPath.push(state.getCurrentLocation());
+           // find all neighbors and order with the neighbor closest to the target first
+           List<Long> neighbors = state.getNeighbours().stream().filter(neighbor -> !visitedPath.contains(neighbor.nodeID()))
+                   .sorted(Comparator.comparing(NodeStatus::distanceToTarget))
+                   .map(NodeStatus::nodeID).toList();
+           //Move to the neighbor closest to the target
+           if (!neighbors.isEmpty()) {
+               state.moveTo(neighbors.get(0));
+               // add our current location to the saved moves in case we need to backtrack
+               savedMoves.addFirst(state.getCurrentLocation());
+
+           }else{
+               // no more neighbors ahead, backtrack to the last available neighbor
+               state.moveTo(savedMoves.removeFirst());
            }
        }
 
-    }
-
-    private boolean crawl(ExplorationState state, ArrayDeque<Long> visitedPath,ArrayDeque<Long> savedMoves) {
-        if (state.getDistanceToTarget() == 0) {
-            return true;
-        }
-
-        // find all available neighbors, ordered with the closest to the exit as first
-        List<Long> neighbors = state.getNeighbours().stream().filter(neighbor -> !visitedPath.contains(neighbor.nodeID()))
-                .sorted(Comparator.comparing(NodeStatus::distanceToTarget))
-                .map(NodeStatus::nodeID).toList();
-        if (!neighbors.isEmpty()) {
-            state.moveTo(neighbors.get(0));
-            // add the neighbor to the available moves in case we need to visit it again
-            savedMoves.addFirst(state.getCurrentLocation());
-
-        }else{
-            // backtrack to the last available neighbor
-            state.moveTo(savedMoves.removeFirst());
-        }
-
-        return crawl(state, visitedPath,savedMoves);
     }
 
     /**
