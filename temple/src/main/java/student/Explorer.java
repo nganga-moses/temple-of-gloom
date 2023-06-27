@@ -5,10 +5,7 @@ import game.ExplorationState;
 import game.Node;
 import game.NodeStatus;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Explorer {
 
@@ -47,53 +44,38 @@ public class Explorer {
         if (state.getDistanceToTarget() == 0) {
             return;
         }
-        List<NodeStatus> visitedNodes = new ArrayList<>();
+        //previous node
+        ArrayDeque<Long> savedMoves = new ArrayDeque<>();
+        ArrayDeque<Long> visitedPath = new ArrayDeque<>();
+       while (state.getDistanceToTarget() > 0) {
+           visitedPath.addFirst(state.getCurrentLocation());
+           if (crawl(state, visitedPath,savedMoves)) {
+               return;
+           }
+       }
 
-        if (crawl(state, visitedNodes)) {
-            return;
-        }
-        //recursive call
-        explore(state);
     }
 
-    private boolean crawl(ExplorationState state, List<NodeStatus> visitedNodes) {
+    private boolean crawl(ExplorationState state, ArrayDeque<Long> visitedPath,ArrayDeque<Long> savedMoves) {
         if (state.getDistanceToTarget() == 0) {
             return true;
         }
-        //find neighbors
-        Collection<NodeStatus> neighbors = state.getNeighbours();
-        NodeStatus closestNeighbor = null;
-        System.out.println("Current Location: " + state.getCurrentLocation());
-        System.out.println("Distance from target: " + state.getDistanceToTarget());
-        System.out.println("Neighbors: " + neighbors.toString());
-        System.out.println("Visited Nodes: " + visitedNodes);
 
+        // find all available neighbors, ordered with the closest to the exit as first
+        List<Long> neighbors = state.getNeighbours().stream().filter(neighbor -> !visitedPath.contains(neighbor.nodeID()))
+                .sorted(Comparator.comparing(NodeStatus::distanceToTarget))
+                .map(NodeStatus::nodeID).toList();
+        if (!neighbors.isEmpty()) {
+            state.moveTo(neighbors.get(0));
+            // add the neighbor to the available moves in case we need to visit it again
+            savedMoves.addFirst(state.getCurrentLocation());
 
-        for (NodeStatus neighbor : neighbors) {
-            if (closestNeighbor == null) {
-                closestNeighbor = neighbor;
-                visitedNodes.add(neighbor);
-            } else {
-                if (neighbor.compareTo(closestNeighbor) <= 0 && !visitedNodes.contains(neighbor)) {
-                    closestNeighbor = neighbor;
-                    visitedNodes.add(neighbor);
-                }else{
-                    visitedNodes.add(neighbor);
-                }
-            }
-
+        }else{
+            // backtrack to the last available neighbor
+            state.moveTo(savedMoves.removeFirst());
         }
-        System.out.println("Chosen neighbor: " + closestNeighbor.nodeID());
-        System.out.println("------------- ");
-        //move to neighbor
 
-        state.moveTo(closestNeighbor.nodeID());
-        return crawl(state, visitedNodes);
-    }
-
-    public boolean visited(NodeStatus node, List<NodeStatus> visitedNodes) {
-
-        return false;
+        return crawl(state, visitedPath,savedMoves);
     }
 
     /**
@@ -121,5 +103,6 @@ public class Explorer {
      */
     public void escape(EscapeState state) {
         //TODO: Escape from the cavern before time runs out
+
     }
 }
